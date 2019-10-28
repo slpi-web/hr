@@ -131,15 +131,17 @@ body{
     
 }
 .grey{
+    display: block;
     background-color: #383C47;
-    margin-left: 15px;
-    padding: 20px 23px;
+    margin-left: 12px;
+    padding: 20px 14px;
 }
 
 .green{
+    display: inline-block;
     background-color: #2B9526;
-    margin-left: 15px;
-    padding: 20px 23px;
+    margin-left: 12px;
+    padding: 20px 14px;
 }
 
 .rightCont{
