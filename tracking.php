@@ -14,14 +14,14 @@
            <meta http-equiv="Content-type" content="text/html;charset=UTF-8"/>
            <meta name="generator" content="2015.0.2.310"/>
            <link rel="shortcut icon" href="/favicon.ico">
-           <title>Вакансии | Ваш курьер</title>
+           <title>Отследить посылку | Ваш курьер</title>
            <meta name="description" content="Курьерская служба «ВАШ КУРЬЕР» оказывает весь спектр услуг. Служба экспресс-доставки писем по выгодным ценам. Личный кабинет. Звоните +7 (495) 646-12-58.">
            <meta name="keywords" content="курьерская служба, курьерская доставка, служба экспресс-доставки писем, Москва">
 
 
 <link rel="stylesheet" href="css/reset.css">
 <link rel="stylesheet" href="css/style.css">
-
+<link rel="stylesheet" href="css/tracking.css">
 
 </head>
 <body>
@@ -59,53 +59,114 @@
 </section>
 <nav class="menu ">
 <ul class="menu__list container">
-        <li class="green"><a href="index.html">Главная</a></li>
-        <li class="grey"><a href="https://lk.y-courier.ru/user/login">Личный кабинет</a></li>
-        <li class="grey"><a href="kalkulaytor.html">Калькулятор</a></li>
-        <li class="grey"><a href="svayz.html">Обратная связь</a></li>
-        <li class="grey"><a href="#">Отследить груз</a></li>
-        <li class="grey"><a href="vakansii.html">Вакансии</a></li>
-        <li class="grey"><a href="dogovor.html">Заключить договор</a></li>
-        <li class="green"><a href="kontacts.html">Контакты</a></li>
+    <li class="green"><a href="index.html">Главная</a></li>
+    <li class="grey"><a href="https://lk.y-courier.ru/user/login">Личный кабинет</a></li>
+    <li class="grey"><a href="kalkulaytor.html">Калькулятор</a></li>
+    <li class="grey"><a href="svayz.html">Обратная связь</a></li>
+    <li class="grey"><a href="#">Отследить груз</a></li>
+    <li class="grey"><a href="vakansii.html">Вакансии</a></li>
+    <li class="grey"><a href="dogovor.html">Заключить договор</a></li>
+    <li class="green"><a href="kontacts.html">Контакты</a></li>
 
 </ul>
 
 </nav>
 
 <section class="container"> 
-<div class="vakansii">
-    <h1> Вакансии </h1>
-    <h2>Менеджер по продажам</h2>
-    <ul>обязанности
-        <li class="chekbox">Поиск клиентов (холодные звонки).</li>
-        <li class="chekbox">Заключение договоров.</li>
-    </ul>
-    <ul>требования
-        <li class="chekbox">Опыт продаж, холодных звонков.</li>
-        <li class="chekbox">Грамотная речь.</li>
-    </ul>
-    <ul>условия
-        <li class="chekbox">Оклад + % с продаж.</li>
-        <li class="chekbox">График работы: 9.00-18.00, будни.</li>
-    </ul>
-    <p>Резюме присылать по адресу yc@y-courier.ru</p>
-    <h2>Менеджер по работе с клиентами</h2>
-    <ul>обязанности
-            <li class="chekbox">Обслуживание и ведение действующих клиентов по телефону и электронной почте.</li>
-            <li class="chekbox">Решение организационных вопросов.</li>
-        </ul>
-        <ul>требования
-            <li class="chekbox">Знание программ Word, Excel, Outlook.</li>
-            <li class="chekbox">Опыт на аналогичной должности желателен.</li>
-        </ul>
-        <ul>условия
-            <li class="chekbox">Оклад + бонусы.</li>
-            <li class="chekbox">График работы: 5/2, 9.00-18.00 либо 10.00-19.00</li>
-        </ul>
-        <p>Резюме присылать по адресу yc@y-courier.ru</p>
-</div>
-    </section>
+    <div class="tracking">
+        <?php
 
+$login = "ФРЕГАТ 99";
+$password = "parshkova";
+
+        $track = isset($_POST['trackNumber']) ? $_POST['trackNumber'] : false;
+
+        $error = false;
+
+        if ($track) {
+            $client = new SoapClient("http://web.cse.ru/cse82_reg/ws/web1c.1cws?wsdl",  array(
+                    'trace' => true,
+                    'soap_version' => SOAP_1_2,
+                    'login' => 'web',
+                    'password'=> 'web',
+                )
+            );
+
+            $trackResult = $client->Tracking(
+                array(
+                    'login' => $login,
+                    'password' => $password,
+                    'documents' => array(
+                        'Key' => 'Documents',
+                        'Properties' => array(
+                            'Key'  => 'DocumentType',
+                            'Value' => 'Order',
+                            'ValueType' => 'string'
+                        ),
+                        'List' => array(
+                            'Key' => $track
+                        )
+                    )
+                )
+            );
+
+            if (isset($trackResult->return->List->List))  {
+                if (!is_array($trackResult->return->List->List))
+                    $trackResult->return->List->List = array($trackResult->return->List->List);
+
+                // Результат
+                ?>
+
+                <table>
+                    <thead>
+                    <tr>
+                        <td>Дата</td>
+                        <td>Информация</td>
+                        <td>Операция</td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php
+                    foreach ($trackResult->return->List->List as $list){
+                        $date = new DateTime($list->Properties[4]->Value);
+                        $datetime = $date->format('d-m-y, H:i');
+                        ?>
+                        <tr>
+                            <td><?php echo $datetime; ?></td>
+                            <td><?php echo $list->Value; ?></td>
+                            <td><?php echo $list->Key; ?></td>
+                        </tr>
+                        <?php
+                    }
+                    ?>
+                    </tbody>
+                </table>
+
+                <?php
+
+            } else
+                $error = true;
+
+        }
+
+        if (!$track || $error) {
+            //форма
+            ?>
+
+            <form method="post">
+                <label for="track">Номер заказа:</label>
+                <input type="text" name="trackNumber" value="<?php echo $track; ?>">
+                <?php if ($error) { ?>
+                    <p>Введите валидный номер заказа.</p>
+                <?php } ?>
+                <button type="submit">Проверить</button>
+            </form>
+
+            <?php
+        }
+        ?>
+        </div>
+    </section>
     <footer class=" footer">
         <div class="container footer__inner">
          <ul class=" footer-nav">
